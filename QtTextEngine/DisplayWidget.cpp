@@ -18,7 +18,7 @@ DisplayWidget::~DisplayWidget()
 void DisplayWidget::paintEvent(QPaintEvent * event)
 {
 	QPainter painter(this);
-	textElement_->setText(L"份都是垃打啊开链接发发掘");
+	textElement_->setText(u"份14\r56发解放大卡dkj啊😂😒🤣");
 	textElement_->horizontalLayout(250);
 	textElement_->drawFace();
 	SkBitmap bitmap = textElement_->getBitmap();

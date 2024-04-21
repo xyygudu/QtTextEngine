@@ -1,8 +1,8 @@
 #include "CharInfo.h"
 
-CharInfo::CharInfo(wchar_t c)
+CharInfo::CharInfo(char16_t c)
 {
-	char_ = c;
+	originChar_ = paintChar_ = c;
 }
 
 CharInfo::~CharInfo()

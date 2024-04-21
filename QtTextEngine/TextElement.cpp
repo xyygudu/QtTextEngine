@@ -1,4 +1,4 @@
-#include "TextElement.h"
+﻿#include "TextElement.h"
 #include <include/gpu/GrDirectContext.h>
 #include <include/gpu/ganesh/gl/GrGLDirectContext.h>
 #include <include/gpu/gl/GrGLInterface.h>
@@ -8,8 +8,7 @@
 #include "include/core/SkImage.h"
 
 TextElement::TextElement()
-    : text_(L"")
-    , font_(SkTypeface::MakeFromName("Microsoft Yahei", SkFontStyle::Normal()), 40)
+    : font_(SkTypeface::MakeFromName("Microsoft Yahei", SkFontStyle::Normal()), 40)
     , alignMode_(AlignMode::LEFT)
     , layout_(Layout::HORIZONTAL)
     , textAreaChangedCallback_(nullptr)
@@ -27,9 +26,8 @@ TextElement::TextElement()
 
 }
 
-void TextElement::setText(const std::wstring& text)
+void TextElement::setText(const std::u16string& text)
 {
-    text_ = text;
     if (!charInfos_.empty())
     {
         charInfos_.clear();
@@ -38,8 +36,16 @@ void TextElement::setText(const std::wstring& text)
         
     for (size_t i = 0; i < text.size(); ++i)
     {
-        std::shared_ptr<CharInfo> pChar(new CharInfo(text[i]));
-        charInfos_.push_back(pChar);
+        if (!isAddChar(text[i]))
+        {
+            std::shared_ptr<CharInfo> pChar(new CharInfo(text[i]));
+            charInfos_.push_back(pChar);
+        }
+        else
+        {
+            charInfos_[charInfos_.size() - 1]->setAddChar(text[i]);
+        }
+        
     }
     isDirty_ = true;
 }
@@ -47,21 +53,30 @@ void TextElement::setText(const std::wstring& text)
 void TextElement::horizontalLayout(float textBoxWidth)
 {
     size_t charCount = charInfos_.size();
-    size_t index = 0;
     float curPosX = 0, curPosY = 0;
     float textWidth = 0, textHeight = 0;
     int lineCount = 1;
-    while (index < charCount)
+    for (size_t i = 0; i < charInfos_.size(); i++)
     {
-        std::shared_ptr<CharInfo> pChar = charInfos_[index];
-        pChar->setPos(curPosX, curPosY);
-        const wchar_t character = pChar->getChar();
-        float advance = font_.measureText(&character, sizeof(character), SkTextEncoding::kUTF16);
+        std::shared_ptr<CharInfo> pChar = charInfos_[i];
+        pChar->setPenPos(curPosX, curPosY);
+        const char16_t ch = pChar->getPaintChar();
+        std::u16string singleChar;
+        if (!isAddChar(ch))
+        {
+            singleChar = charInfos_[i]->getPaintChar();
+        }
+        else
+        {
+            singleChar += charInfos_[i]->getAddChar();
+        }
+        
+        float advance = font_.measureText(singleChar.c_str(), singleChar.size() * sizeof(char16_t), SkTextEncoding::kUTF16);
         curPosX += advance;
         if (curPosX > textWidth)
             textWidth = curPosX;
         
-        if (character == L'\r' || character == L'\n')
+        if (ch == u'\r' || ch == u'\n')
         {
             lineCount++;
             curPosX = 0;
@@ -72,11 +87,10 @@ void TextElement::horizontalLayout(float textBoxWidth)
             lineCount++;
             if (textWidth - advance > textWidth)
                 textWidth -= advance;
-            index--;
+            i--;
             curPosX = 0;
             curPosY += font_.getSpacing();
         }
-        index++;
     }
     textHeight = lineCount * font_.getSpacing();
     textArea_.width = textWidth;
@@ -96,18 +110,33 @@ void TextElement::drawFace()
     SkFontMetrics* metrics = new SkFontMetrics();
     float lineHegiht = font_.getMetrics(metrics);
     float ascent = metrics->fAscent;
-    for (size_t i = 0; i < charInfos_.size(); ++i)
+    size_t i = 0;
+    while (i < charInfos_.size())
     {
         std::shared_ptr<CharInfo> pChar = charInfos_[i];
-        const wchar_t character = pChar->getChar();
-        if (character == L'\r' || character == L'\n')
+        const char16_t character = pChar->getPaintChar();
+        if (character == u'\r' || character == u'\n')
+        {
+            i++;
             continue;
-        canvas_->drawSimpleText(&character, sizeof(character), SkTextEncoding::kUTF16,
-            pChar->getPosX() + hSpace, pChar->getPosY() + vSpace - metrics->fDescent + font_.getSpacing(), font_, paint);
+        }
+            
+        std::u16string singleChar;
+        if (!isAddChar(character))
+        {
+            singleChar = charInfos_[i]->getPaintChar();
+        }
+        else
+        {
+            singleChar += charInfos_[i]->getAddChar();
+        }
+        canvas_->drawSimpleText(singleChar.c_str(), singleChar.size() * sizeof(char16_t), SkTextEncoding::kUTF16,
+            pChar->getPenX() + hSpace, pChar->getPenY() + vSpace - metrics->fDescent + font_.getSpacing(), font_, paint);
+        i += 1;
     }
     SkRect rect;
-    paint.setStyle(SkPaint::kStroke_Style);  // ����Ϊ�߿���ʽ
-    paint.setStrokeWidth(2);  // ���ñ߿����
+    paint.setStyle(SkPaint::kStroke_Style);  // 设置为边框样式
+    paint.setStrokeWidth(2);  // 设置边框宽度
     paint.setColor(SK_ColorWHITE);
     float x = centerPoint_.x - textArea_.width / 2;
     float y = centerPoint_.y - textArea_.height / 2;
@@ -125,3 +154,8 @@ void TextElement::setCenterPoint(float x, float y)
     centerPoint_.y = y;
 }
 
+bool TextElement::isAddChar(const char16_t& utf16Char)
+{
+    // 注意，超过0xFFFF无法用utf16表示，这里没有判断
+    return !(utf16Char >= 0x0000 && utf16Char <= 0xFFFF);
+}

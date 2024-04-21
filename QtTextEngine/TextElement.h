@@ -16,7 +16,7 @@ class TextElement : public Element
 {
 public:
 	TextElement();
-	void setText(const std::wstring& text);
+	void setText(const std::u16string& text);
 	void horizontalLayout(float textBoxWidth);
 	virtual void drawFace() override;
 	virtual void drawBorder() override;
@@ -25,10 +25,9 @@ public:
 
 	
 private:
-
+	bool isAddChar(const char16_t & utf16Char);
 private:
 	using TextAreaChangedCallback = std::function<void(float, float)>;
-	std::wstring text_;
 
 	GESize canvasArea_;
 	GESize textArea_;
