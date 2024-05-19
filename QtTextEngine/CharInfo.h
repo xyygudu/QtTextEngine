@@ -1,7 +1,6 @@
 #pragma once
 
-class CharInfo
-{
+class CharInfo {
 public:
 	CharInfo(char16_t c);
 	~CharInfo();

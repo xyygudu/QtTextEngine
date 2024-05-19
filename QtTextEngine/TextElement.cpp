@@ -13,8 +13,7 @@ TextElement::TextElement()
     , layout_(Layout::HORIZONTAL)
     , textAreaChangedCallback_(nullptr)
     , isDirty_(false)
-    , centerPoint_(GEPointF(300, 240))
-{
+    , centerPoint_(GEPointF(300, 240)) {
     SkScalar width = 600;
     SkScalar height = 480;
     canvasArea_.width = width;
@@ -26,23 +25,18 @@ TextElement::TextElement()
 
 }
 
-void TextElement::setText(const std::u16string& text)
-{
-    if (!charInfos_.empty())
-    {
+void TextElement::setText(const std::u16string& text) {
+    if (!charInfos_.empty()) {
         charInfos_.clear();
         bitmap_.erase(SkColorSetARGB(255, 101, 33, 131), bitmap_.bounds());
     }
         
-    for (size_t i = 0; i < text.size(); ++i)
-    {
-        if (!isAddChar(text[i]))
-        {
+    for (size_t i = 0; i < text.size(); ++i) {
+        if (!isAddChar(text[i])) {
             std::shared_ptr<CharInfo> pChar(new CharInfo(text[i]));
             charInfos_.push_back(pChar);
         }
-        else
-        {
+        else {
             charInfos_[charInfos_.size() - 1]->setAddChar(text[i]);
         }
         
@@ -50,24 +44,20 @@ void TextElement::setText(const std::u16string& text)
     isDirty_ = true;
 }
 
-void TextElement::horizontalLayout(float textBoxWidth)
-{
+void TextElement::horizontalLayout(float textBoxWidth) {
     size_t charCount = charInfos_.size();
     float curPosX = 0, curPosY = 0;
     float textWidth = 0, textHeight = 0;
     int lineCount = 1;
-    for (size_t i = 0; i < charInfos_.size(); i++)
-    {
+    for (size_t i = 0; i < charInfos_.size(); i++) {
         std::shared_ptr<CharInfo> pChar = charInfos_[i];
         pChar->setPenPos(curPosX, curPosY);
         const char16_t ch = pChar->getPaintChar();
         std::u16string singleChar;
-        if (!isAddChar(ch))
-        {
+        if (!isAddChar(ch)) {
             singleChar = charInfos_[i]->getPaintChar();
         }
-        else
-        {
+        else {
             singleChar += charInfos_[i]->getAddChar();
         }
         
@@ -76,14 +66,12 @@ void TextElement::horizontalLayout(float textBoxWidth)
         if (curPosX > textWidth)
             textWidth = curPosX;
         
-        if (ch == u'\r' || ch == u'\n')
-        {
+        if (ch == u'\r' || ch == u'\n') {
             lineCount++;
             curPosX = 0;
             curPosY += font_.getSpacing();
         }
-        if (curPosX > textBoxWidth)
-        {
+        if (curPosX > textBoxWidth) {
             lineCount++;
             if (textWidth - advance > textWidth)
                 textWidth -= advance;
@@ -99,8 +87,7 @@ void TextElement::horizontalLayout(float textBoxWidth)
         textAreaChangedCallback_(textWidth, textHeight);
 }
 
-void TextElement::drawFace()
-{
+void TextElement::drawFace() {
     SkPaint paint;
     paint.setARGB(255, 255, 0, 0);
     paint.setAntiAlias(true);
@@ -111,28 +98,22 @@ void TextElement::drawFace()
     float lineHegiht = font_.getMetrics(metrics);
     float ascent = metrics->fAscent;
     size_t i = 0;
-    while (i < charInfos_.size())
-    {
+    for (size_t i = 0; i < charInfos_.size(); i++) {
         std::shared_ptr<CharInfo> pChar = charInfos_[i];
         const char16_t character = pChar->getPaintChar();
-        if (character == u'\r' || character == u'\n')
-        {
-            i++;
+        if (character == u'\r' || character == u'\n') {
             continue;
         }
             
         std::u16string singleChar;
-        if (!isAddChar(character))
-        {
+        if (!isAddChar(character)) {
             singleChar = charInfos_[i]->getPaintChar();
         }
-        else
-        {
+        else {
             singleChar += charInfos_[i]->getAddChar();
         }
         canvas_->drawSimpleText(singleChar.c_str(), singleChar.size() * sizeof(char16_t), SkTextEncoding::kUTF16,
             pChar->getPenX() + hSpace, pChar->getPenY() + vSpace - metrics->fDescent + font_.getSpacing(), font_, paint);
-        i += 1;
     }
     SkRect rect;
     paint.setStyle(SkPaint::kStroke_Style);  // 设置为边框样式
@@ -144,18 +125,15 @@ void TextElement::drawFace()
     canvas_->drawRect(rect, paint);
 }
 
-void TextElement::drawBorder()
-{
+void TextElement::drawBorder() {
 }
 
-void TextElement::setCenterPoint(float x, float y)
-{
+void TextElement::setCenterPoint(float x, float y) {
     centerPoint_.x = x;
     centerPoint_.y = y;
 }
 
-bool TextElement::isAddChar(const char16_t& utf16Char)
-{
+bool TextElement::isAddChar(const char16_t& utf16Char) {
     // 注意，超过0xFFFF无法用utf16表示，这里没有判断
     return !(utf16Char >= 0x0000 && utf16Char <= 0xFFFF);
 }

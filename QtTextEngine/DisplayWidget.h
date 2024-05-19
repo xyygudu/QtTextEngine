@@ -7,8 +7,7 @@
 #include "Element.h"
 #include "TextElement.h"
 
-class DisplayWidget  : public QWidget
-{
+class DisplayWidget  : public QWidget {
 	Q_OBJECT
 
 public:

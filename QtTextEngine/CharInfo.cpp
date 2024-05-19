@@ -1,15 +1,12 @@
 #include "CharInfo.h"
 
-CharInfo::CharInfo(char16_t c)
-{
+CharInfo::CharInfo(char16_t c) {
 	originChar_ = paintChar_ = c;
 }
 
-CharInfo::~CharInfo()
-{
+CharInfo::~CharInfo() {
 }
 
-void CharInfo::draw()
-{
+void CharInfo::draw() {
 
 }
